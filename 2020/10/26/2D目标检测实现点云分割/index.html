@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="背景知识Intel RealSense D435i 有效距离： 10m内，在实际使用时会对反光的物体如电脑显示器无法准确测量深度。 RGBD数据 深度图像 &#x3D; 普通的RGB三通道彩色图像 + Depth Map">
+<meta property="og:type" content="article">
+<meta property="og:title" content="2D目标检测实现点云分割">
+<meta property="og:url" content="http://example.com/2020/10/26/2D%E7%9B%AE%E6%A0%87%E6%A3%80%E6%B5%8B%E5%AE%9E%E7%8E%B0%E7%82%B9%E4%BA%91%E5%88%86%E5%89%B2/index.html">
+<meta property="og:site_name" content="‘小清新的网站&#39;">
+<meta property="og:description" content="背景知识Intel RealSense D435i 有效距离： 10m内，在实际使用时会对反光的物体如电脑显示器无法准确测量深度。 RGBD数据 深度图像 &#x3D; 普通的RGB三通道彩色图像 + Depth Map">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="http://example.com/2020/10/26/2D%E7%9B%AE%E6%A0%87%E6%A3%80%E6%B5%8B%E5%AE%9E%E7%8E%B0%E7%82%B9%E4%BA%91%E5%88%86%E5%89%B2/intrinstic.png">
+<meta property="og:image" content="http://example.com/2020/10/26/2D%E7%9B%AE%E6%A0%87%E6%A3%80%E6%B5%8B%E5%AE%9E%E7%8E%B0%E7%82%B9%E4%BA%91%E5%88%86%E5%89%B2/performance.png">
+<meta property="og:image" content="http://example.com/2020/10/26/2D%E7%9B%AE%E6%A0%87%E6%A3%80%E6%B5%8B%E5%AE%9E%E7%8E%B0%E7%82%B9%E4%BA%91%E5%88%86%E5%89%B2/cutmix.png">
+<meta property="og:image" content="http://example.com/2020/10/26/2D%E7%9B%AE%E6%A0%87%E6%A3%80%E6%B5%8B%E5%AE%9E%E7%8E%B0%E7%82%B9%E4%BA%91%E5%88%86%E5%89%B2/attention.png">
+<meta property="og:image" content="http://example.com/2020/10/26/2D%E7%9B%AE%E6%A0%87%E6%A3%80%E6%B5%8B%E5%AE%9E%E7%8E%B0%E7%82%B9%E4%BA%91%E5%88%86%E5%89%B2/loss.png">
+<meta property="article:published_time" content="2020-10-26T18:21:26.000Z">
+<meta property="article:modified_time" content="2020-10-27T17:53:54.029Z">
+<meta property="article:author" content="Zhenhao Zhou">
+<meta property="article:tag" content="点云">
+<meta property="article:tag" content="目标检测">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/2020/10/26/2D%E7%9B%AE%E6%A0%87%E6%A3%80%E6%B5%8B%E5%AE%9E%E7%8E%B0%E7%82%B9%E4%BA%91%E5%88%86%E5%89%B2/intrinstic.png">
+
+<link rel="canonical" href="http://example.com/2020/10/26/2D%E7%9B%AE%E6%A0%87%E6%A3%80%E6%B5%8B%E5%AE%9E%E7%8E%B0%E7%82%B9%E4%BA%91%E5%88%86%E5%89%B2/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>2D目标检测实现点云分割 | ‘小清新的网站'</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">‘小清新的网站'</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2020/10/26/2D%E7%9B%AE%E6%A0%87%E6%A3%80%E6%B5%8B%E5%AE%9E%E7%8E%B0%E7%82%B9%E4%BA%91%E5%88%86%E5%89%B2/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.jpg">
+      <meta itemprop="name" content="Zhenhao Zhou">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="‘小清新的网站'">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          2D目标检测实现点云分割
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2020-10-26 13:21:26" itemprop="dateCreated datePublished" datetime="2020-10-26T13:21:26-05:00">2020-10-26</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2020-10-27 12:53:54" itemprop="dateModified" datetime="2020-10-27T12:53:54-05:00">2020-10-27</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E7%82%B9%E4%BA%91%E5%A4%84%E7%90%86/" itemprop="url" rel="index"><span itemprop="name">点云处理</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="背景知识"><a href="#背景知识" class="headerlink" title="背景知识"></a>背景知识</h1><h2 id="Intel-RealSense-D435i"><a href="#Intel-RealSense-D435i" class="headerlink" title="Intel RealSense D435i"></a>Intel RealSense D435i</h2><hr>
+<p>有效距离： 10m内，在实际使用时会对反光的物体如电脑显示器无法准确测量深度。</p>
+<h2 id="RGBD数据"><a href="#RGBD数据" class="headerlink" title="RGBD数据"></a>RGBD数据</h2><blockquote>
+<p>深度图像 = 普通的RGB三通道彩色图像 + Depth Map   </p>
+</blockquote>
+<a id="more"></a>
+<h3 id="深度（位深）"><a href="#深度（位深）" class="headerlink" title="深度（位深）"></a>深度（位深）</h3><p>图像深度是指存储每个象素所用的<strong>位数（bit)</strong>. 图像深度确定彩色图像的每个像素可能有的颜色数,或者确定灰度图像的每个像素可能有的灰度级数.它决定了彩色图像中可出现的最多颜色数,或灰度图像中的最大灰度。<br>常见的图片位深有：</p>
+<ul>
+<li>8-bit: 对于灰度图为$2^8$,对于RGB图为$2^2\times2^3\times2^3$</li>
+<li>16-bit: 对于RGB图片为$2^5\times2^5\times2^6$</li>
+<li>24-bit: 对于RGB图片为$2^8\times2^8\times2^8$（真彩）</li>
+<li>32-bit: Alpha透明度（8bit） + 24位</li>
+</ul>
+<p>深度数值越高，可以获得更多的色彩。</p>
+<h3 id="Depth-Image"><a href="#Depth-Image" class="headerlink" title="Depth Image"></a>Depth Image</h3><h4 id="读取时注意事项"><a href="#读取时注意事项" class="headerlink" title="读取时注意事项"></a>读取时注意事项</h4><ol>
+<li><p>Intel RealSense D435i 深度图使用的是16位深的精准度，需要注意的是openCV在图片读取时不能使用默认的读取模式。</p>
+</li>
+<li><p>在读取前要使用<strong>rs.align</strong> 方法把的depth和color的摄像头进行对齐。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">frames = pipeline.wait_for_frames()</span><br><span class="line">align = rs.align(rs.stream.color)</span><br><span class="line">frameset = align.process(frames)</span><br><span class="line">depth_frame = frameset.get_depth_frame()</span><br><span class="line">color_frame = frameset.get_color_frame()</span><br></pre></td></tr></table></figure>
+<h2 id="点云数据"><a href="#点云数据" class="headerlink" title="点云数据"></a>点云数据</h2></li>
+</ol>
+<hr>
+<p>点云的数据存储格式为[N,3]或[N,6],其中3为（X,Y,Z) 6为(X,Y,Z,R,G,B)对于N，无论如何更改顺序，点的坐标已经固定。 点云数据是3d空间内相对于相机的坐标。</p>
+<h2 id="RGBD-数据转为点云"><a href="#RGBD-数据转为点云" class="headerlink" title="RGBD 数据转为点云"></a>RGBD 数据转为点云</h2><hr>
+<h3 id="原理"><a href="#原理" class="headerlink" title="原理"></a>原理</h3><p>相机是把3D世界的点通过小孔成像映射到图像上，而RGBD到点云就是把图像映射回3D世界。</p>
+<h4 id="深度图片到真实距离"><a href="#深度图片到真实距离" class="headerlink" title="深度图片到真实距离"></a>深度图片到真实距离</h4><p>获取realsense的距离scale乘以像素深度。</p>
+<blockquote>
+<p>float scale = ds.get_depth_scale()<br>float meters = pixel * scale;</p>
+<h4 id="内参"><a href="#内参" class="headerlink" title="内参"></a>内参</h4><p>相机的内部参数：<br><img src="/2020/10/26/2D%E7%9B%AE%E6%A0%87%E6%A3%80%E6%B5%8B%E5%AE%9E%E7%8E%B0%E7%82%B9%E4%BA%91%E5%88%86%E5%89%B2/intrinstic.png" alt><br>这个图片是小孔成像的示意图，注意这里的图像为了好展示，放在了孔的另外一边。</p>
+<script type="math/tex; mode=display">
+  \begin{matrix}
+   f_x & 0 & c_x \\
+   0 & f_y & c_y \\
+   0 & 0 & 1
+  \end{matrix} \tag{1}</script><p>cx和cy很容易理解，它们表示相机光轴在图像坐标系中的偏移量，以像素为单位。<br>$f_X和f_Y$是焦距就是孔到图片的距离，为什么会有俩个值？因为焦距的单位是像素，如果图像长宽相等时，$f_x=f_y$,但如果长宽不等时会有不同的真实距离到像素的比值，此时$\frac{f_x}{w}=\frac{f_y}{h}=\frac{f}{d}$这个是小孔成像位置到图片像素的转换。<br>像素到3D坐标的转换$\frac{Z}{fx}=\frac{X}{u-c_x}$求X，其中$u$是图像坐标。</p>
+</blockquote>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">image_to_pcd</span>(<span class="params">depth,cx,cy,fx,fy</span>):</span></span><br><span class="line">    rows = depth.shape[<span class="number">0</span>]</span><br><span class="line">    cols = depth.shape[<span class="number">1</span>]</span><br><span class="line">    c, r = np.meshgrid(np.arange(cols), np.arange(rows))</span><br><span class="line">    point_cloud = np.stack([r, c, depth])</span><br><span class="line">    point_cloud=point_cloud.transpose((<span class="number">1</span>,<span class="number">2</span>,<span class="number">0</span>))</span><br><span class="line">    point_cloud = point_cloud.reshape((<span class="number">-1</span>,<span class="number">3</span>))</span><br><span class="line">    x = ((point_cloud[:, <span class="number">0</span>] - cx) * point_cloud[:, <span class="number">2</span>]) / fx</span><br><span class="line">    y = ((point_cloud[:, <span class="number">1</span>] - cy) * point_cloud[:, <span class="number">2</span>]) / fy</span><br><span class="line">    point_cloud[:, <span class="number">0</span>] = x</span><br><span class="line">    point_cloud[:, <span class="number">1</span>] = y</span><br><span class="line">    <span class="keyword">return</span> point_cloud</span><br></pre></td></tr></table></figure>
+<p>经过内参的转换后，如何把所有的不同照相机位置采集的图片放在一个统一的坐标系下，需要用外参进行实时的旋转。</p>
+<h4 id="外参"><a href="#外参" class="headerlink" title="外参"></a>外参</h4><p>相机外参数是在世界坐标系中的参数，比如相机的位置、旋转方向等，是实时改变的相机在3D世间中的位置。相机的位姿R,T又称为相机的外参数。R为一个3*3的旋转矩阵，T为1*3的位移矩阵，最后的点云数据为<script type="math/tex">[N,3]=[N,3]*R([3*3])+T([1*3])</script></p>
+<h2 id="3D目标检测的缺点"><a href="#3D目标检测的缺点" class="headerlink" title="3D目标检测的缺点"></a>3D目标检测的缺点</h2><hr>
+<p>数据集难以获取，标注困难，室内数据集中的SUNRGBD只包含37种物体，如果想训练其他的物体获取标注数据十分困难。相较于点云标注，2D图像分割，2D目标检测有着更加容易的标注手段，可以快速的标注数据，从而训练特定的目标，为了达到2D目标检测到点云分割，我有了这项的工作。</p>
+<p>我的方法路径为：</p>
+<blockquote>
+<p><strong>2D目标检测===&gt;图像分割===&gt;图片到点云==&gt;点云分割优化</strong></p>
+</blockquote>
+<h2 id="2D目标检测"><a href="#2D目标检测" class="headerlink" title="2D目标检测"></a>2D目标检测</h2><hr>
+<h3 id="YOLO-V4"><a href="#YOLO-V4" class="headerlink" title="YOLO V4"></a>YOLO V4</h3><p>Yolo v4的性能用这一张图就能展现出其性能的强悍，更快，更准。Yolo v4这篇文章还是数据增强和目标检测领域的方法集合，很值得去读一下。我主要讲一下Yolo v4的优化。<br><img src="/2020/10/26/2D%E7%9B%AE%E6%A0%87%E6%A3%80%E6%B5%8B%E5%AE%9E%E7%8E%B0%E7%82%B9%E4%BA%91%E5%88%86%E5%89%B2/performance.png" alt> </p>
+<h4 id="Bag-of-freebies"><a href="#Bag-of-freebies" class="headerlink" title="Bag of freebies"></a>Bag of freebies</h4><h5 id="CutMix"><a href="#CutMix" class="headerlink" title="CutMix"></a>CutMix</h5><p><img src="/2020/10/26/2D%E7%9B%AE%E6%A0%87%E6%A3%80%E6%B5%8B%E5%AE%9E%E7%8E%B0%E7%82%B9%E4%BA%91%E5%88%86%E5%89%B2/cutmix.png" alt><br>CutMix注意是给一个ground-truth 分一定的label,0.3猫，0.7狗。</p>
+<h5 id="Mosaic-数据增强"><a href="#Mosaic-数据增强" class="headerlink" title="Mosaic 数据增强"></a>Mosaic 数据增强</h5><p>将四张图片拼接在一起。</p>
+<h5 id="DropBlock"><a href="#DropBlock" class="headerlink" title="DropBlock"></a>DropBlock</h5><p>cutout是对输入图片进行cut,dropblock是对特征图进行cutout.</p>
+<h5 id="类标签平滑"><a href="#类标签平滑" class="headerlink" title="类标签平滑"></a>类标签平滑</h5><p>Label Smoothing平滑就是将标签进行一个平滑，原始的标签是0、1，在平滑后变成0.005(如果是二分类)、0.995， 也就是说对分类准确做了一点惩罚，让模型不可以分类的太准确，太准确容易过拟合。</p>
+<h5 id="DIoU-Loss"><a href="#DIoU-Loss" class="headerlink" title="DIoU Loss"></a>DIoU Loss</h5><p>DIoU Loss 是整合IoU Loss + 对角线惩罚 + 长宽比惩罚</p>
+<h5 id="Random-training-shapes"><a href="#Random-training-shapes" class="headerlink" title="Random training shapes"></a>Random training shapes</h5><p>故名思议。</p>
+<h4 id="Bag-of-sepecial"><a href="#Bag-of-sepecial" class="headerlink" title="Bag of sepecial"></a>Bag of sepecial</h4><h5 id="Mish-activation"><a href="#Mish-activation" class="headerlink" title="Mish activation"></a>Mish activation</h5><p>Mish对负值的轻微允许允许更好的梯度流，而不是像ReLU中那样的硬零边界。平滑的激活函数允许更好的信息深入神经网络，从而得到更好的准确性和泛化。<script type="math/tex">f_X=x*\tanh{\log{1+e^x}}</script><br><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">mish</span>(<span class="params">self,input_layer</span>):</span></span><br><span class="line">    <span class="keyword">return</span> input_layer*tf.math.tanh(tf.math.softplus(input_layer))</span><br></pre></td></tr></table></figure></p>
+<h5 id="SPP"><a href="#SPP" class="headerlink" title="SPP"></a>SPP</h5><p>通过不同的Max Pooling 获取不同大小的感受野后进行融合。<br><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">f1=tf.keras.layers.MaxPooling2D(pool_size=(<span class="number">5</span>,<span class="number">5</span>), strides=(<span class="number">1</span>, <span class="number">1</span>),padding=<span class="string">&quot;same&quot;</span>)(conv)</span><br><span class="line">f2 = tf.keras.layers.MaxPooling2D(pool_size=(<span class="number">9</span>, <span class="number">9</span>), strides=(<span class="number">1</span>, <span class="number">1</span>), padding=<span class="string">&quot;same&quot;</span>)(conv)</span><br><span class="line">f3 = tf.keras.layers.MaxPooling2D(pool_size=(<span class="number">13</span>, <span class="number">13</span>), strides=(<span class="number">1</span>, <span class="number">1</span>), padding=<span class="string">&quot;same&quot;</span>)(conv)</span><br><span class="line">conv=tf.keras.layers.Concatenate(axis=<span class="number">-1</span>)([f1,f2,f3,conv])</span><br></pre></td></tr></table></figure></p>
+<h5 id="SAM-block"><a href="#SAM-block" class="headerlink" title="SAM-block"></a>SAM-block</h5><p>这里我想谈一下注意力机制，最出名的是SENet中的SE模块,很简单的方法可以很好的结果，Global Average Pooling 后经过Sigmoid处理直接乘在原值上。是一种简化的channel attention.<br><img src="/2020/10/26/2D%E7%9B%AE%E6%A0%87%E6%A3%80%E6%B5%8B%E5%AE%9E%E7%8E%B0%E7%82%B9%E4%BA%91%E5%88%86%E5%89%B2/attention.png" alt><br>Spatial attention Model 如图所示。<br>Yolo v4中的SAM就是将pooling换为卷积，然后进行点对点乘积。点对点的注意力机制。<br>在EfficientDet中，BiFPN用了很有意思的注意力机制，在特征融合时给不同的特征图不同的权重，具体实现如下，很简单加了一个可训练的权值。<br><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">wBiFPNAdd</span>(<span class="params">keras.layers.Layer</span>):</span></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">__init__</span>(<span class="params">self, epsilon=<span class="number">1e-4</span>, **kwargs</span>):</span></span><br><span class="line">    <span class="built_in">super</span>(wBiFPNAdd, self).__init__(**kwargs)</span><br><span class="line">    self.epsilon = epsilon</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">build</span>(<span class="params">self, input_shape</span>):</span></span><br><span class="line">    num_in = <span class="built_in">len</span>(input_shape)</span><br><span class="line">    self.w = self.add_weight(name=self.name,</span><br><span class="line">                             shape=(num_in,),</span><br><span class="line">                             initializer=keras.initializers.constant(<span class="number">1</span> / num_in),</span><br><span class="line">                             trainable=<span class="literal">True</span>,</span><br><span class="line">                             dtype=tf.float32)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">call</span>(<span class="params">self, inputs, **kwargs</span>):</span></span><br><span class="line">    w = keras.activations.relu(self.w)</span><br><span class="line">    x = tf.reduce_sum([w[i] * inputs[i] <span class="keyword">for</span> i <span class="keyword">in</span> <span class="built_in">range</span>(<span class="built_in">len</span>(inputs))], axis=<span class="number">0</span>)</span><br><span class="line">    x = x / (tf.reduce_sum(w) + self.epsilon)</span><br><span class="line">    <span class="keyword">return</span> x</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">compute_output_shape</span>(<span class="params">self, input_shape</span>):</span></span><br><span class="line">    <span class="keyword">return</span> input_shape[<span class="number">0</span>]</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">get_config</span>(<span class="params">self</span>):</span></span><br><span class="line">    config = <span class="built_in">super</span>(wBiFPNAdd, self).get_config()</span><br><span class="line">    config.update(&#123;</span><br><span class="line">        <span class="string">&#x27;epsilon&#x27;</span>: self.epsilon</span><br><span class="line">    &#125;)</span><br><span class="line">    <span class="keyword">return</span> config</span><br></pre></td></tr></table></figure></p>
+<h5 id="Cross-stage-partial-connections-CSP"><a href="#Cross-stage-partial-connections-CSP" class="headerlink" title="Cross-stage partial connections (CSP)"></a>Cross-stage partial connections (CSP)</h5><p>简单来说就是个大的残差边。</p>
+<h3 id="采样方式"><a href="#采样方式" class="headerlink" title="采样方式"></a>采样方式</h3><p>Yolo v4的采样方式延续YOLO V3，计算中心点落入哪个位置的cell,选取三层里哪层的anchor IoU最大，当为预测框。负样本为所有IoU\&lt;0.5 的anchor，正负样本比为1:3.</p>
+<h3 id="损失函数"><a href="#损失函数" class="headerlink" title="损失函数"></a>损失函数</h3><h3 id="输出"><a href="#输出" class="headerlink" title="输出"></a>输出</h3><p>$3<em>(5+80)$ 3个anchor的$[b_x,b_y,b_w,b_h,confidence]$+分类,最后推理时值为confidence\</em>分类。这里的confidence在训练时只有0和1.</p>
+<script type="math/tex; mode=display">b_x=\sigma{t_x}+c_x</script><p>c_x是当前cell左上角的坐标。</p>
+<script type="math/tex; mode=display">b_w=a_we^{t_w}</script><p>a_w是anchor的宽<br>YOLO的对象类别概率中没有background一项。</p>
+<h3 id="损失函数-1"><a href="#损失函数-1" class="headerlink" title="损失函数"></a>损失函数</h3><p><img src="/2020/10/26/2D%E7%9B%AE%E6%A0%87%E6%A3%80%E6%B5%8B%E5%AE%9E%E7%8E%B0%E7%82%B9%E4%BA%91%E5%88%86%E5%89%B2/loss.png" alt> </p>
+<p>$b_x,b_y$的损失函数是binary_CrossEntrophy,$b_w,b_h$损失函数是MSE<br>confidence是binary_CrossEntrophy。<br>class_lossYOLO v3是binary_CrossEntrophy,YOLO V4是focal loss.<br>yolo v4在bounding box regression时会乘以$2-\frac{gt_{box}面积}{图像面积}$的权重。</p>
+<h2 id="图像分割"><a href="#图像分割" class="headerlink" title="图像分割"></a>图像分割</h2><hr>
+<p>图像分割使用GraphCut算法，直接使用的openCV,计划写一个函数原理的文章。</p>
+<h2 id="分割优化"><a href="#分割优化" class="headerlink" title="分割优化"></a>分割优化</h2><p>我使用了区域增长算法，当然可以使用一些其他符合自己数据集的方法。首先，需要理解一下概念。</p>
+<h3 id="法向量"><a href="#法向量" class="headerlink" title="法向量"></a>法向量</h3><p>平面的法向量是垂直于它的单位向量，而在曲面一个点上的法向量被定义为垂直于与曲面相切的平面的向量。</p>
+<h4 id="如何求法向量？？？"><a href="#如何求法向量？？？" class="headerlink" title="如何求法向量？？？"></a>如何求法向量？？？</h4><p>点云只是单独的点，如果需要求法向量，则需要用KNN找到最近的一些点，通过计算协方差矩阵后进行特征值分解，获取特征值和特征向量。特征值按降序排列${\lambda1,\lambda2,\lambda3}$，对应的特征向量为${e_1,e_2,e_3}$，特征值越大代表点在对应的特征向量分布最散，那么垂直方向应该是特征值最小的，从而我们获取了法线。</p>
+<h3 id="曲率"><a href="#曲率" class="headerlink" title="曲率"></a>曲率</h3><p>顾名思义是该点的弯曲程度，计算公式为$\frac{\lambda1}{\lambda1+\lambda2+\lambda3}$.</p>
+<h3 id="区域增长算法"><a href="#区域增长算法" class="headerlink" title="区域增长算法"></a>区域增长算法</h3><p>选取一些合适的初始点在目标检测框内，计算曲率排序，从小到大。<br>使用KNN获取最近的点，如果这点和点集中的点的距离小于阈值，将其加入点集。如果这个点集占比大于阈值，则删除剩余的点。这个是传统计算机视觉算法，设计到很多Hyper-parameter,请根据自己的数据集进行设计。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E7%82%B9%E4%BA%91/" rel="tag"># 点云</a>
+              <a href="/tags/%E7%9B%AE%E6%A0%87%E6%A3%80%E6%B5%8B/" rel="tag"># 目标检测</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2020/10/26/%E7%82%B9%E4%BA%91%E7%9B%AE%E6%A0%87%E6%A3%80%E6%B5%8B%E7%9A%84%E6%96%B9%E6%B3%95%E5%92%8C%E5%AE%9E%E8%B7%B5/" rel="prev" title="点云目标检测的方法和实践">
+      <i class="fa fa-chevron-left"></i> 点云目标检测的方法和实践
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E8%83%8C%E6%99%AF%E7%9F%A5%E8%AF%86"><span class="nav-number">1.</span> <span class="nav-text">背景知识</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Intel-RealSense-D435i"><span class="nav-number">1.1.</span> <span class="nav-text">Intel RealSense D435i</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#RGBD%E6%95%B0%E6%8D%AE"><span class="nav-number">1.2.</span> <span class="nav-text">RGBD数据</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%B7%B1%E5%BA%A6%EF%BC%88%E4%BD%8D%E6%B7%B1%EF%BC%89"><span class="nav-number">1.2.1.</span> <span class="nav-text">深度（位深）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Depth-Image"><span class="nav-number">1.2.2.</span> <span class="nav-text">Depth Image</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%AF%BB%E5%8F%96%E6%97%B6%E6%B3%A8%E6%84%8F%E4%BA%8B%E9%A1%B9"><span class="nav-number">1.2.2.1.</span> <span class="nav-text">读取时注意事项</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%82%B9%E4%BA%91%E6%95%B0%E6%8D%AE"><span class="nav-number">1.3.</span> <span class="nav-text">点云数据</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#RGBD-%E6%95%B0%E6%8D%AE%E8%BD%AC%E4%B8%BA%E7%82%B9%E4%BA%91"><span class="nav-number">1.4.</span> <span class="nav-text">RGBD 数据转为点云</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8E%9F%E7%90%86"><span class="nav-number">1.4.1.</span> <span class="nav-text">原理</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%B7%B1%E5%BA%A6%E5%9B%BE%E7%89%87%E5%88%B0%E7%9C%9F%E5%AE%9E%E8%B7%9D%E7%A6%BB"><span class="nav-number">1.4.1.1.</span> <span class="nav-text">深度图片到真实距离</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%86%85%E5%8F%82"><span class="nav-number">1.4.1.2.</span> <span class="nav-text">内参</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%A4%96%E5%8F%82"><span class="nav-number">1.4.1.3.</span> <span class="nav-text">外参</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3D%E7%9B%AE%E6%A0%87%E6%A3%80%E6%B5%8B%E7%9A%84%E7%BC%BA%E7%82%B9"><span class="nav-number">1.5.</span> <span class="nav-text">3D目标检测的缺点</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2D%E7%9B%AE%E6%A0%87%E6%A3%80%E6%B5%8B"><span class="nav-number">1.6.</span> <span class="nav-text">2D目标检测</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#YOLO-V4"><span class="nav-number">1.6.1.</span> <span class="nav-text">YOLO V4</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Bag-of-freebies"><span class="nav-number">1.6.1.1.</span> <span class="nav-text">Bag of freebies</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#CutMix"><span class="nav-number">1.6.1.1.1.</span> <span class="nav-text">CutMix</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#Mosaic-%E6%95%B0%E6%8D%AE%E5%A2%9E%E5%BC%BA"><span class="nav-number">1.6.1.1.2.</span> <span class="nav-text">Mosaic 数据增强</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#DropBlock"><span class="nav-number">1.6.1.1.3.</span> <span class="nav-text">DropBlock</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E7%B1%BB%E6%A0%87%E7%AD%BE%E5%B9%B3%E6%BB%91"><span class="nav-number">1.6.1.1.4.</span> <span class="nav-text">类标签平滑</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#DIoU-Loss"><span class="nav-number">1.6.1.1.5.</span> <span class="nav-text">DIoU Loss</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#Random-training-shapes"><span class="nav-number">1.6.1.1.6.</span> <span class="nav-text">Random training shapes</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Bag-of-sepecial"><span class="nav-number">1.6.1.2.</span> <span class="nav-text">Bag of sepecial</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#Mish-activation"><span class="nav-number">1.6.1.2.1.</span> <span class="nav-text">Mish activation</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#SPP"><span class="nav-number">1.6.1.2.2.</span> <span class="nav-text">SPP</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#SAM-block"><span class="nav-number">1.6.1.2.3.</span> <span class="nav-text">SAM-block</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#Cross-stage-partial-connections-CSP"><span class="nav-number">1.6.1.2.4.</span> <span class="nav-text">Cross-stage partial connections (CSP)</span></a></li></ol></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%87%87%E6%A0%B7%E6%96%B9%E5%BC%8F"><span class="nav-number">1.6.2.</span> <span class="nav-text">采样方式</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%8D%9F%E5%A4%B1%E5%87%BD%E6%95%B0"><span class="nav-number">1.6.3.</span> <span class="nav-text">损失函数</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%BE%93%E5%87%BA"><span class="nav-number">1.6.4.</span> <span class="nav-text">输出</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%8D%9F%E5%A4%B1%E5%87%BD%E6%95%B0-1"><span class="nav-number">1.6.5.</span> <span class="nav-text">损失函数</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2"><span class="nav-number">1.7.</span> <span class="nav-text">图像分割</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%88%86%E5%89%B2%E4%BC%98%E5%8C%96"><span class="nav-number">1.8.</span> <span class="nav-text">分割优化</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%B3%95%E5%90%91%E9%87%8F"><span class="nav-number">1.8.1.</span> <span class="nav-text">法向量</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%A6%82%E4%BD%95%E6%B1%82%E6%B3%95%E5%90%91%E9%87%8F%EF%BC%9F%EF%BC%9F%EF%BC%9F"><span class="nav-number">1.8.1.1.</span> <span class="nav-text">如何求法向量？？？</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%9B%B2%E7%8E%87"><span class="nav-number">1.8.2.</span> <span class="nav-text">曲率</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8C%BA%E5%9F%9F%E5%A2%9E%E9%95%BF%E7%AE%97%E6%B3%95"><span class="nav-number">1.8.3.</span> <span class="nav-text">区域增长算法</span></a></li></ol></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Zhenhao Zhou"
+      src="/images/avatar.jpg">
+  <p class="site-author-name" itemprop="name">Zhenhao Zhou</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">3</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">2</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">3</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/Crispus1119" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;Crispus1119" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="/zhou2494@uwlax.edu" title="E-Mail → zhou2494@uwlax.edu"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="/linkedin.com/in/zhenhao-zhou-900532190" title="LinkedIn → linkedin.com&#x2F;in&#x2F;zhenhao-zhou-900532190"><i class="fab fa-weibo fa-fw"></i>LinkedIn</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Zhenhao Zhou</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+      
+
+<script>
+  if (typeof MathJax === 'undefined') {
+    window.MathJax = {
+      loader: {
+        source: {
+          '[tex]/amsCd': '[tex]/amscd',
+          '[tex]/AMScd': '[tex]/amscd'
+        }
+      },
+      tex: {
+        inlineMath: {'[+]': [['$', '$']]},
+        tags: 'ams'
+      },
+      options: {
+        renderActions: {
+          findScript: [10, doc => {
+            document.querySelectorAll('script[type^="math/tex"]').forEach(node => {
+              const display = !!node.type.match(/; *mode=display/);
+              const math = new doc.options.MathItem(node.textContent, doc.inputJax[0], display);
+              const text = document.createTextNode('');
+              node.parentNode.replaceChild(text, node);
+              math.start = {node: text, delim: '', n: 0};
+              math.end = {node: text, delim: '', n: 0};
+              doc.math.push(math);
+            });
+          }, '', false],
+          insertedScript: [200, () => {
+            document.querySelectorAll('mjx-container').forEach(node => {
+              let target = node.parentNode;
+              if (target.nodeName.toLowerCase() === 'li') {
+                target.parentNode.classList.add('has-jax');
+              }
+            });
+          }, '', false]
+        }
+      }
+    };
+    (function () {
+      var script = document.createElement('script');
+      script.src = '//cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js';
+      script.defer = true;
+      document.head.appendChild(script);
+    })();
+  } else {
+    MathJax.startup.document.state(0);
+    MathJax.texReset();
+    MathJax.typeset();
+  }
+</script>
+
+    
+
+  
+
+</body>
+</html>

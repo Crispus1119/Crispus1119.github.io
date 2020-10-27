@@ -160,7 +160,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2020/10/24/%E7%82%B9%E4%BA%91%E7%9B%AE%E6%A0%87%E6%A3%80%E6%B5%8B%E7%9A%84%E6%96%B9%E6%B3%95%E5%92%8C%E5%AE%9E%E8%B7%B5/">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2020/10/26/2D%E7%9B%AE%E6%A0%87%E6%A3%80%E6%B5%8B%E5%AE%9E%E7%8E%B0%E7%82%B9%E4%BA%91%E5%88%86%E5%89%B2/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.jpg">
@@ -174,7 +174,7 @@
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
           
-            <a href="/2020/10/24/%E7%82%B9%E4%BA%91%E7%9B%AE%E6%A0%87%E6%A3%80%E6%B5%8B%E7%9A%84%E6%96%B9%E6%B3%95%E5%92%8C%E5%AE%9E%E8%B7%B5/" class="post-title-link" itemprop="url">点云目标检测的方法和实践</a>
+            <a href="/2020/10/26/2D%E7%9B%AE%E6%A0%87%E6%A3%80%E6%B5%8B%E5%AE%9E%E7%8E%B0%E7%82%B9%E4%BA%91%E5%88%86%E5%89%B2/" class="post-title-link" itemprop="url">2D目标检测实现点云分割</a>
         </h2>
 
         <div class="post-meta">
@@ -183,10 +183,101 @@
                 <i class="far fa-calendar"></i>
               </span>
               <span class="post-meta-item-text">Posted on</span>
-              
 
-              <time title="Created: 2020-10-24 15:14:19 / Modified: 17:55:51" itemprop="dateCreated datePublished" datetime="2020-10-24T15:14:19-05:00">2020-10-24</time>
+              <time title="Created: 2020-10-26 13:21:26" itemprop="dateCreated datePublished" datetime="2020-10-26T13:21:26-05:00">2020-10-26</time>
             </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2020-10-27 12:53:54" itemprop="dateModified" datetime="2020-10-27T12:53:54-05:00">2020-10-27</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E7%82%B9%E4%BA%91%E5%A4%84%E7%90%86/" itemprop="url" rel="index"><span itemprop="name">点云处理</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="背景知识"><a href="#背景知识" class="headerlink" title="背景知识"></a>背景知识</h1><h2 id="Intel-RealSense-D435i"><a href="#Intel-RealSense-D435i" class="headerlink" title="Intel RealSense D435i"></a>Intel RealSense D435i</h2><hr>
+<p>有效距离： 10m内，在实际使用时会对反光的物体如电脑显示器无法准确测量深度。</p>
+<h2 id="RGBD数据"><a href="#RGBD数据" class="headerlink" title="RGBD数据"></a>RGBD数据</h2><blockquote>
+<p>深度图像 = 普通的RGB三通道彩色图像 + Depth Map   </p>
+</blockquote>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2020/10/26/2D%E7%9B%AE%E6%A0%87%E6%A3%80%E6%B5%8B%E5%AE%9E%E7%8E%B0%E7%82%B9%E4%BA%91%E5%88%86%E5%89%B2/#more" rel="contents">
+                Read more &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2020/10/26/%E7%82%B9%E4%BA%91%E7%9B%AE%E6%A0%87%E6%A3%80%E6%B5%8B%E7%9A%84%E6%96%B9%E6%B3%95%E5%92%8C%E5%AE%9E%E8%B7%B5/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.jpg">
+      <meta itemprop="name" content="Zhenhao Zhou">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="‘小清新的网站'">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2020/10/26/%E7%82%B9%E4%BA%91%E7%9B%AE%E6%A0%87%E6%A3%80%E6%B5%8B%E7%9A%84%E6%96%B9%E6%B3%95%E5%92%8C%E5%AE%9E%E8%B7%B5/" class="post-title-link" itemprop="url">点云目标检测的方法和实践</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2020-10-26 13:21:26" itemprop="dateCreated datePublished" datetime="2020-10-26T13:21:26-05:00">2020-10-26</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2020-10-27 12:53:57" itemprop="dateModified" datetime="2020-10-27T12:53:57-05:00">2020-10-27</time>
+              </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
                 <i class="far fa-folder"></i>
@@ -215,35 +306,14 @@
 <p>加法是一个Symmetry Function ：output==a+b==b+a<br>减法不是一个Symmetry Function：output==a-b!=b-a  </p>
 </blockquote>
 <p>在PointNet使用MaxPooling作为信息的提取就会解决数据集的无序性。</p>
-<h3 id="相邻点交互（Interaction-among-points）"><a href="#相邻点交互（Interaction-among-points）" class="headerlink" title="相邻点交互（Interaction among points）"></a>相邻点交互（Interaction among points）</h3><hr>
-<p>点云单独的一个点没有任何的信息，所以在设计网络时需要将周围的点获取足够的信息。</p>
-<h4 id="设计思想-1"><a href="#设计思想-1" class="headerlink" title="设计思想"></a>设计思想</h4><p>如果做单一分类，无需单独点的信息。如果是做点云分割时将点的信息和global feature 进行拼接。在结构设计方面pointnet++提出了更优秀的设计方式，我们将在后面提及。</p>
-<h3 id="变换不变性（Invariance-under-transformations）"><a href="#变换不变性（Invariance-under-transformations）" class="headerlink" title="变换不变性（Invariance under transformations）"></a>变换不变性（Invariance under transformations）</h3><hr>
-<p>点云整体的旋转和平移不应该影响它的分类或者分割。像2D目标检测会通过Max Pooling提供一定的变换不变性。</p>
-<h4 id="设计思想-2"><a href="#设计思想-2" class="headerlink" title="设计思想"></a>设计思想</h4><p>PointNet作者提出了T-Net用来学习旋转矩阵，但最后的效果不是特别好。</p>
-<h2 id="PointNet网络"><a href="#PointNet网络" class="headerlink" title="PointNet网络"></a>PointNet网络</h2><hr>
-<p>###网络结构</p>
-<p><img src="/2020/10/24/%E7%82%B9%E4%BA%91%E7%9B%AE%E6%A0%87%E6%A3%80%E6%B5%8B%E7%9A%84%E6%96%B9%E6%B3%95%E5%92%8C%E5%AE%9E%E8%B7%B5/pointnet.png"> </p>
-<h3 id="T-Net"><a href="#T-Net" class="headerlink" title="T-Net"></a>T-Net</h3><p>T-Net是用来学习一个3<em>3旋转矩阵来对每个点进行旋转，简单来说就是（N</em>3)<em>(3</em>3)=(N*3)的一个数学计算。</p>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># input_Transformation_net</span></span><br><span class="line">input_points = Input(shape=(num_points, <span class="number">3</span>))</span><br><span class="line">x = Convolution1D(<span class="number">64</span>, <span class="number">1</span>, activation=<span class="string">&#x27;relu&#x27;</span>, input_shape=(num_points, <span class="number">3</span>))(input_points)</span><br><span class="line">x = BatchNormalization()(x)</span><br><span class="line">x = Convolution1D(<span class="number">128</span>, <span class="number">1</span>, activation=<span class="string">&#x27;relu&#x27;</span>)(x)</span><br><span class="line">x = BatchNormalization()(x)</span><br><span class="line">x = Convolution1D(<span class="number">1024</span>, <span class="number">1</span>, activation=<span class="string">&#x27;relu&#x27;</span>)(x)</span><br><span class="line">x = BatchNormalization()(x)</span><br><span class="line">x = MaxPooling1D(pool_size=num_points)(x)</span><br><span class="line">x = Dense(<span class="number">512</span>, activation=<span class="string">&#x27;relu&#x27;</span>)(x)</span><br><span class="line">x = BatchNormalization()(x)</span><br><span class="line">x = Dense(<span class="number">256</span>, activation=<span class="string">&#x27;relu&#x27;</span>)(x)</span><br><span class="line">x = BatchNormalization()(x)</span><br><span class="line">x = Dense(<span class="number">9</span>, weights=[np.zeros([<span class="number">256</span>, <span class="number">9</span>]), np.array([<span class="number">1</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">1</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">1</span>]).astype(np.float32)])(x)</span><br><span class="line">input_T = Reshape((<span class="number">3</span>, <span class="number">3</span>))(x)</span><br></pre></td></tr></table></figure>
-<p>获取[3*3]的旋转矩阵后进行相乘</p>
-<figure class="highlight py"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">tf.matmul(A, B)</span><br></pre></td></tr></table></figure>
-<h3 id="MLP"><a href="#MLP" class="headerlink" title="MLP"></a>MLP</h3><p>“mlp”代表”multi-layer perceptron”（多层感知机）。其中，mlp是通过共享权重的卷积实现。</p>
-<figure class="highlight py"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">g = Convolution1D(<span class="number">64</span>, <span class="number">1</span>, input_shape=(num_points, <span class="number">3</span>), activation=<span class="string">&#x27;relu&#x27;</span>)(g)</span><br><span class="line">g = BatchNormalization()(g)</span><br><span class="line">g = Convolution1D(<span class="number">64</span>, <span class="number">1</span>, input_shape=(num_points, <span class="number">3</span>), activation=<span class="string">&#x27;relu&#x27;</span>)(g)</span><br><span class="line">g = BatchNormalization()(g)</span><br></pre></td></tr></table></figure>
-<p>如果是分类问题直接链接全链接层。如果是分割或检测则将其拼接到点上。</p>
-<h2 id="PointNet"><a href="#PointNet" class="headerlink" title="PointNet++"></a>PointNet++</h2><p>pointNet++是为了解决pointNet没有太好的融入局部的信息，从而设计的升级版本。<br><img src="/2020/10/24/%E7%82%B9%E4%BA%91%E7%9B%AE%E6%A0%87%E6%A3%80%E6%B5%8B%E7%9A%84%E6%96%B9%E6%B3%95%E5%92%8C%E5%AE%9E%E8%B7%B5/pointnet++.png"> </p>
-<h3 id="Sampling"><a href="#Sampling" class="headerlink" title="Sampling"></a>Sampling</h3><p>有俩种方式<strong>farthest_point_sample</strong>和**<em>random_point_sample**</em> 其中farest_point_sample需要用c++自己写方法，还没弄清，以后写。<br>随机选取中心点的方法在点集中随机选取num_centroids个点做为中心点，代码如下：</p>
-<figure class="highlight py"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">random_sample</span>(<span class="params">n_centroid, xyz</span>):</span></span><br><span class="line">    <span class="string">&#x27;&#x27;&#x27;</span></span><br><span class="line"><span class="string">    n_centroid: int32</span></span><br><span class="line"><span class="string">    xyz: (batch, n_inputs, 3)</span></span><br><span class="line"><span class="string">    Return:</span></span><br><span class="line"><span class="string">        idx: (batch, n_centroid)</span></span><br><span class="line"><span class="string">    &#x27;&#x27;&#x27;</span></span><br><span class="line">    distrib = tf.zeros(tf.shape(xyz)[:<span class="number">2</span>])</span><br><span class="line">    idx = tf.random.categorical(distrib, n_centroid)</span><br><span class="line">    idx = tf.cast(idx, tf.int32)</span><br><span class="line">    <span class="keyword">return</span> idx</span><br></pre></td></tr></table></figure>
-<p>其中，我想讲一下 <strong><em>tf.random.categorical</em></strong> 这个函数的使用：</p>
-<ul>
-<li>第一个输入是logits(Bacth,Class_NUM):是多项式分布中每个类别的概率，当都设为0就是完全随机。  </li>
-<li>第二个输入是要产生的个数(N_Centroid).  </li>
-<li>函数的输出是（Batch,N_Centroid).  </li>
-</ul>
-<h3 id="Groupling"><a href="#Groupling" class="headerlink" title="Groupling"></a>Groupling</h3><p>根据这些选取的中心点每个点周围一定半径内<strong>球形区域</strong>内的点作为一个Grouping，然后对这个Grouping的点应用PointNet. 这个是c++写的，以后再说。<br>注意点：在grouping后面会对这个球体进行标准化减去中心坐标后除以半径。</p>
-<figure class="highlight py"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">grouped_xyz -= tf.tile(tf.expand_dims(new_xyz, <span class="number">2</span>), [<span class="number">1</span>,<span class="number">1</span>,self.n_samples,<span class="number">1</span>]) <span class="comment"># translation normalization</span></span><br><span class="line">grouped_xyz /= self.radius <span class="comment"># normalize xyz w.r.t the radius</span></span><br></pre></td></tr></table></figure>
-<p>此时数据形状为(batch_size, n_centroid, n_samples, channels)所以用Conv2D的MLP的PointNet进行特征提取，输出为(batch_size, n_centroid, 1, channels)=&gt;(batch_size, n_centroid, channels)</p>
-
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2020/10/26/%E7%82%B9%E4%BA%91%E7%9B%AE%E6%A0%87%E6%A3%80%E6%B5%8B%E7%9A%84%E6%96%B9%E6%B3%95%E5%92%8C%E5%AE%9E%E8%B7%B5/#more" rel="contents">
+                Read more &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
       
     </div>
 
@@ -262,7 +332,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2020/10/23/hello-world/">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2020/10/25/RetinaNet-%E8%A7%A3%E8%AF%BB/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.jpg">
@@ -276,7 +346,7 @@
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
           
-            <a href="/2020/10/23/hello-world/" class="post-title-link" itemprop="url">Hello World</a>
+            <a href="/2020/10/25/RetinaNet-%E8%A7%A3%E8%AF%BB/" class="post-title-link" itemprop="url">RetinaNet 解读</a>
         </h2>
 
         <div class="post-meta">
@@ -286,7 +356,23 @@
               </span>
               <span class="post-meta-item-text">Posted on</span>
 
-              <time title="Created: 2020-10-23 17:26:49" itemprop="dateCreated datePublished" datetime="2020-10-23T17:26:49-05:00">2020-10-23</time>
+              <time title="Created: 2020-10-25 14:13:44" itemprop="dateCreated datePublished" datetime="2020-10-25T14:13:44-05:00">2020-10-25</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2020-10-27 12:44:52" itemprop="dateModified" datetime="2020-10-27T12:44:52-05:00">2020-10-27</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E7%9B%AE%E6%A0%87%E6%A3%80%E6%B5%8B/" itemprop="url" rel="index"><span itemprop="name">目标检测</span></a>
+                </span>
             </span>
 
           
@@ -300,20 +386,18 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <p>Welcome to <a target="_blank" rel="noopener" href="https://hexo.io/">Hexo</a>! This is your very first post. Check <a target="_blank" rel="noopener" href="https://hexo.io/docs/">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a target="_blank" rel="noopener" href="https://hexo.io/docs/troubleshooting.html">troubleshooting</a> or you can ask me on <a target="_blank" rel="noopener" href="https://github.com/hexojs/hexo/issues">GitHub</a>.</p>
-<h2 id="Quick-Start"><a href="#Quick-Start" class="headerlink" title="Quick Start"></a>Quick Start</h2><h3 id="Create-a-new-post"><a href="#Create-a-new-post" class="headerlink" title="Create a new post"></a>Create a new post</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo new <span class="string">&quot;My New Post&quot;</span></span><br></pre></td></tr></table></figure>
-
-<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/writing.html">Writing</a></p>
-<h3 id="Run-server"><a href="#Run-server" class="headerlink" title="Run server"></a>Run server</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo server</span><br></pre></td></tr></table></figure>
-
-<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/server.html">Server</a></p>
-<h3 id="Generate-static-files"><a href="#Generate-static-files" class="headerlink" title="Generate static files"></a>Generate static files</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo generate</span><br></pre></td></tr></table></figure>
-
-<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/generating.html">Generating</a></p>
-<h3 id="Deploy-to-remote-sites"><a href="#Deploy-to-remote-sites" class="headerlink" title="Deploy to remote sites"></a>Deploy to remote sites</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo deploy</span><br></pre></td></tr></table></figure>
-
-<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/one-command-deployment.html">Deployment</a></p>
-
+          <h2 id="RetinaNet细节讲解"><a href="#RetinaNet细节讲解" class="headerlink" title="RetinaNet细节讲解"></a>RetinaNet细节讲解</h2><ul>
+<li><p>RetinaNet 使用了FPN结构，Bounding Box Regression是对角点的回归而不是$[x^c,y^c,w,h].</p>
+<script type="math/tex; mode=display">t_{LT}=\dfrac{x_{LT}-x_a}{w_a}</script><script type="math/tex; mode=display">t_{LT}=\dfrac{y_{LT}-y_a}{h_a}</script><script type="math/tex; mode=display">t_{RB}=\dfrac{x_{RB}-x_a}{w_a}</script><script type="math/tex; mode=display">t_{RB}=\dfrac{y_{RB}-y_a}{h_a}</script></li>
+</ul>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2020/10/25/RetinaNet-%E8%A7%A3%E8%AF%BB/#more" rel="contents">
+                Read more &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
       
     </div>
 
@@ -396,20 +480,20 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">2</span>
+          <span class="site-state-item-count">3</span>
           <span class="site-state-item-name">posts</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
             <a href="/categories/">
           
-        <span class="site-state-item-count">1</span>
+        <span class="site-state-item-count">2</span>
         <span class="site-state-item-name">categories</span></a>
       </div>
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">2</span>
+        <span class="site-state-item-count">3</span>
         <span class="site-state-item-name">tags</span></a>
       </div>
   </nav>
@@ -504,6 +588,61 @@
 
 
   
+
+  
+      
+
+<script>
+  if (typeof MathJax === 'undefined') {
+    window.MathJax = {
+      loader: {
+        source: {
+          '[tex]/amsCd': '[tex]/amscd',
+          '[tex]/AMScd': '[tex]/amscd'
+        }
+      },
+      tex: {
+        inlineMath: {'[+]': [['$', '$']]},
+        tags: 'ams'
+      },
+      options: {
+        renderActions: {
+          findScript: [10, doc => {
+            document.querySelectorAll('script[type^="math/tex"]').forEach(node => {
+              const display = !!node.type.match(/; *mode=display/);
+              const math = new doc.options.MathItem(node.textContent, doc.inputJax[0], display);
+              const text = document.createTextNode('');
+              node.parentNode.replaceChild(text, node);
+              math.start = {node: text, delim: '', n: 0};
+              math.end = {node: text, delim: '', n: 0};
+              doc.math.push(math);
+            });
+          }, '', false],
+          insertedScript: [200, () => {
+            document.querySelectorAll('mjx-container').forEach(node => {
+              let target = node.parentNode;
+              if (target.nodeName.toLowerCase() === 'li') {
+                target.parentNode.classList.add('has-jax');
+              }
+            });
+          }, '', false]
+        }
+      }
+    };
+    (function () {
+      var script = document.createElement('script');
+      script.src = '//cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js';
+      script.defer = true;
+      document.head.appendChild(script);
+    })();
+  } else {
+    MathJax.startup.document.state(0);
+    MathJax.texReset();
+    MathJax.typeset();
+  }
+</script>
+
+    
 
   
 

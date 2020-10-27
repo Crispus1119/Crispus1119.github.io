@@ -20,17 +20,21 @@
     var CONFIG = {"hostname":"example.com","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
   </script>
 
-  <meta property="og:type" content="website">
-<meta property="og:title" content="tags">
-<meta property="og:url" content="http://example.com/tags/index.html">
+  <meta name="description" content="RetinaNet细节讲解 RetinaNet 使用了FPN结构，Bounding Box Regression是对角点的回归而不是$[x^c,y^c,w,h]. t_{LT}&#x3D;\dfrac{x_{LT}-x_a}{w_a}t_{LT}&#x3D;\dfrac{y_{LT}-y_a}{h_a}t_{RB}&#x3D;\dfrac{x_{RB}-x_a}{w_a}t_{RB}&#x3D;\dfrac{y_{RB}-y_a}{h_">
+<meta property="og:type" content="article">
+<meta property="og:title" content="RetinaNet 解读">
+<meta property="og:url" content="http://example.com/2020/10/25/RetinaNet-%E8%A7%A3%E8%AF%BB/index.html">
 <meta property="og:site_name" content="‘小清新的网站&#39;">
+<meta property="og:description" content="RetinaNet细节讲解 RetinaNet 使用了FPN结构，Bounding Box Regression是对角点的回归而不是$[x^c,y^c,w,h]. t_{LT}&#x3D;\dfrac{x_{LT}-x_a}{w_a}t_{LT}&#x3D;\dfrac{y_{LT}-y_a}{h_a}t_{RB}&#x3D;\dfrac{x_{RB}-x_a}{w_a}t_{RB}&#x3D;\dfrac{y_{RB}-y_a}{h_">
 <meta property="og:locale" content="en_US">
-<meta property="article:published_time" content="2020-10-24T20:18:37.000Z">
-<meta property="article:modified_time" content="2020-10-24T20:22:48.400Z">
+<meta property="article:published_time" content="2020-10-25T19:13:44.000Z">
+<meta property="article:modified_time" content="2020-10-27T17:44:52.633Z">
 <meta property="article:author" content="Zhenhao Zhou">
+<meta property="article:tag" content="目标检测">
+<meta property="article:tag" content="One-Stage">
 <meta name="twitter:card" content="summary">
 
-<link rel="canonical" href="http://example.com/tags/">
+<link rel="canonical" href="http://example.com/2020/10/25/RetinaNet-%E8%A7%A3%E8%AF%BB/">
 
 
 <script id="page-configurations">
@@ -38,13 +42,12 @@
   CONFIG.page = {
     sidebar: "",
     isHome : false,
-    isPost : false,
+    isPost : true,
     lang   : 'en'
   };
 </script>
 
-  <title>tags | ‘小清新的网站'
-</title>
+  <title>RetinaNet 解读 | ‘小清新的网站'</title>
   
 
 
@@ -156,51 +159,127 @@
       <div class="main-inner">
         <div class="content-wrap">
           
-  
-  
 
-          <div class="content page posts-expand">
+          <div class="content post posts-expand">
             
 
     
-    
-    
-    <div class="post-block" lang="en">
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2020/10/25/RetinaNet-%E8%A7%A3%E8%AF%BB/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.jpg">
+      <meta itemprop="name" content="Zhenhao Zhou">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="‘小清新的网站'">
+    </span>
       <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          RetinaNet 解读
+        </h1>
 
-<h1 class="post-title" itemprop="name headline">tags
-</h1>
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
 
-<div class="post-meta">
+              <time title="Created: 2020-10-25 14:13:44" itemprop="dateCreated datePublished" datetime="2020-10-25T14:13:44-05:00">2020-10-25</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2020-10-27 12:44:52" itemprop="dateModified" datetime="2020-10-27T12:44:52-05:00">2020-10-27</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E7%9B%AE%E6%A0%87%E6%A3%80%E6%B5%8B/" itemprop="url" rel="index"><span itemprop="name">目标检测</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="RetinaNet细节讲解"><a href="#RetinaNet细节讲解" class="headerlink" title="RetinaNet细节讲解"></a>RetinaNet细节讲解</h2><ul>
+<li><p>RetinaNet 使用了FPN结构，Bounding Box Regression是对角点的回归而不是$[x^c,y^c,w,h].</p>
+<script type="math/tex; mode=display">t_{LT}=\dfrac{x_{LT}-x_a}{w_a}</script><script type="math/tex; mode=display">t_{LT}=\dfrac{y_{LT}-y_a}{h_a}</script><script type="math/tex; mode=display">t_{RB}=\dfrac{x_{RB}-x_a}{w_a}</script><script type="math/tex; mode=display">t_{RB}=\dfrac{y_{RB}-y_a}{h_a}</script></li>
+</ul>
+<a id="more"></a>
+<ul>
+<li>为了加速预测每个FPN层选取TOP1000的Anchor并且IoU value&gt;0.05。收集所有层产生的预测框进行NMS.</li>
+<li>回归只计算正样本的loss，且除以正样本的个数。分类只计算正样本和负样本的loss，并且也是除以正样本的个数，而不是除以正负样本的.</li>
+<li>RetinaNet分类函数使用的Sigmoid多二分类和YOLOV3中类似。</li>
+<li>TensorFlowd中的默认初始化参数为 $\mu=0$,$std=\sqrt{\frac{2}{F^(in)+F(out)}}$. 但是在retinaNet中最后分类层初始化的设计，为了让一开始的预测都为背景则Sigmoid的分类函数为0.01:<script type="math/tex; mode=display">w=0,sigmoid=0.01$$ ===>$$\frac{1}{1+e^{wx+b}}=0.01$$===>w=0代入求得
+$$b=-\log\frac{1-0.01}{0.01}</script>这种设计方式可以应用到其他初始化设计中。</li>
+</ul>
+<p>参数初始化代码：</p>
+<pre><code>import math
+import tensorflow as tf
+class PriorProbability(keras.initializers.Initializer):
+
+     def __init__(self, probability=0.01):
+        self.probability = probability
+
+     def get_config(self):
+        return &#123;
+              &#39;probability&#39;: self.probability
+        &#125;
+
+     def __call__(self, shape, dtype=None):
+        # set bias to -log((1 - p)/p) for foreground
+        result = keras.backend.ones(shape, dtype=dtype) * -math.log((1 - self.probability) / self.probability)
+        return result
+</code></pre>
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E7%9B%AE%E6%A0%87%E6%A3%80%E6%B5%8B/" rel="tag"># 目标检测</a>
+              <a href="/tags/One-Stage/" rel="tag"># One-Stage</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item"></div>
+      <div class="post-nav-item">
+    <a href="/2020/10/26/%E7%82%B9%E4%BA%91%E7%9B%AE%E6%A0%87%E6%A3%80%E6%B5%8B%E7%9A%84%E6%96%B9%E6%B3%95%E5%92%8C%E5%AE%9E%E8%B7%B5/" rel="next" title="点云目标检测的方法和实践">
+      点云目标检测的方法和实践 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
   
 
-</div>
-
-</header>
-
-      
-      
-      
-      <div class="post-body">
-          <div class="tag-cloud">
-            <div class="tag-cloud-title">
-              3 tags in total
-            </div>
-            <div class="tag-cloud-tags">
-              <a href="/tags/One-Stage/" style="font-size: 12px; color: #ccc">One-Stage</a> <a href="/tags/%E7%82%B9%E4%BA%91/" style="font-size: 21px; color: #6f6f6f">点云</a> <a href="/tags/%E7%9B%AE%E6%A0%87%E6%A3%80%E6%B5%8B/" style="font-size: 30px; color: #111">目标检测</a>
-            </div>
-          </div>
-        
-      </div>
-      
-      
-      
-    </div>
-    
-
-    
-    
-    
 
 
           </div>
@@ -251,6 +330,7 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#RetinaNet%E7%BB%86%E8%8A%82%E8%AE%B2%E8%A7%A3"><span class="nav-number">1.</span> <span class="nav-text">RetinaNet细节讲解</span></a></li></ol></div>
       </div>
       <!--/noindex-->
 
@@ -376,6 +456,59 @@
   
 
   
+      
+
+<script>
+  if (typeof MathJax === 'undefined') {
+    window.MathJax = {
+      loader: {
+        source: {
+          '[tex]/amsCd': '[tex]/amscd',
+          '[tex]/AMScd': '[tex]/amscd'
+        }
+      },
+      tex: {
+        inlineMath: {'[+]': [['$', '$']]},
+        tags: 'ams'
+      },
+      options: {
+        renderActions: {
+          findScript: [10, doc => {
+            document.querySelectorAll('script[type^="math/tex"]').forEach(node => {
+              const display = !!node.type.match(/; *mode=display/);
+              const math = new doc.options.MathItem(node.textContent, doc.inputJax[0], display);
+              const text = document.createTextNode('');
+              node.parentNode.replaceChild(text, node);
+              math.start = {node: text, delim: '', n: 0};
+              math.end = {node: text, delim: '', n: 0};
+              doc.math.push(math);
+            });
+          }, '', false],
+          insertedScript: [200, () => {
+            document.querySelectorAll('mjx-container').forEach(node => {
+              let target = node.parentNode;
+              if (target.nodeName.toLowerCase() === 'li') {
+                target.parentNode.classList.add('has-jax');
+              }
+            });
+          }, '', false]
+        }
+      }
+    };
+    (function () {
+      var script = document.createElement('script');
+      script.src = '//cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js';
+      script.defer = true;
+      document.head.appendChild(script);
+    })();
+  } else {
+    MathJax.startup.document.state(0);
+    MathJax.texReset();
+    MathJax.typeset();
+  }
+</script>
+
+    
 
   
 
